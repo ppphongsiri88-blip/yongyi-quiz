@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>咏亦进化论｜原生家庭自我觉察测量表</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #FAF8F5;
+    --primary: #C4956A;
+    --primary-light: #FDF6F0;
+    --text-dark: #3D3530;
+    --text-mid: #6B6259;
+    --text-hint: #A89F90;
+    --border: #E8E4DC;
+    --tag-bg: #F0EAE1;
+    --progress-bg: #EDE9E0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    font-family: -apple-system, 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+    color: var(--text-dark);
+    overflow: hidden;
+  }
+
+  #app { width: 100%; height: 100%; position: relative; overflow: hidden; }
+
+  .screen {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.28s ease;
+    overflow-y: auto; overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  .screen.active { opacity: 1; pointer-events: all; }
+
+  /* ── START ── */
+  #screen-start { align-items: center; justify-content: center; padding: 48px 32px; min-height: 100%; }
+  .start-inner { width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center; }
+
+  .brand-mark { display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; }
+  .brand-name { font-size: 13px; font-weight: 400; color: var(--text-hint); letter-spacing: 0.5px; margin: 10px 0 8px; }
+  /* 产品名升级为主视觉标题 */
+  .brand-sub  {
+    font-size: 20px; font-weight: 700; color: var(--text-dark);
+    letter-spacing: 0.5px; line-height: 1.45; text-align: center;
+  }
+  /* 权威性标签 */
+  .brand-credential {
+    display: inline-flex; align-items: center; gap: 5px;
+    margin-top: 10px; padding: 4px 12px;
+    background: var(--tag-bg); border-radius: 100px;
+    font-size: 10px; color: var(--text-hint); letter-spacing: 0.3px;
+  }
+
+  /* 名言区块 */
+  .start-quote-block {
+    width: 100%; margin-bottom: 20px;
+    padding: 18px 20px;
+    background: #fff; border-radius: 14px; border: 1px solid var(--border);
+    text-align: center;
+  }
+  .start-quote-en {
+    font-size: 10.5px; color: var(--text-hint); line-height: 1.7;
+    font-style: italic; letter-spacing: 0.2px; margin-bottom: 6px;
+  }
+  .start-quote-zh {
+    font-size: 13px; font-weight: 500; color: var(--text-dark);
+    line-height: 1.65; letter-spacing: 0.3px; margin-bottom: 6px;
+  }
+  .start-quote-author {
+    font-size: 10px; color: var(--text-hint); letter-spacing: 0.3px;
+  }
+
+  .start-divider { width: 32px; height: 1px; background: var(--primary); opacity: 0.5; margin-bottom: 16px; }
+  .start-desc { font-size: 14px; line-height: 1.95; color: var(--text-mid); text-align: center; margin-bottom: 28px; }
+
+  .start-meta { display: flex; gap: 28px; margin-bottom: 32px; }
+  .meta-item  { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .meta-num   { font-size: 20px; font-weight: 600; color: var(--primary); }
+  .meta-label { font-size: 10px; color: var(--text-hint); }
+
+  .btn-primary {
+    width: 100%; max-width: 280px; padding: 15px 0;
+    background: var(--primary); color: #fff; border: none; border-radius: 100px;
+    font-size: 15px; font-weight: 500; letter-spacing: 0.5px;
+    cursor: pointer; font-family: inherit;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+  .btn-primary:active { opacity: 0.85; transform: scale(0.98); }
+
+  /* ── QUIZ ── */
+  #screen-quiz { min-height: 100%; }
+
+  .quiz-header {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg); padding: 16px 24px 0;
+  }
+  .quiz-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .quiz-brand { display: flex; align-items: center; gap: 8px; }
+  .quiz-brand-name { font-size: 12px; font-weight: 500; color: var(--text-mid); }
+  .quiz-counter { font-size: 12px; color: var(--text-hint); }
+  .quiz-counter span { color: var(--text-mid); font-weight: 500; }
+
+  .progress-bar { height: 3px; background: var(--progress-bg); border-radius: 2px; overflow: hidden; margin-bottom: 16px; }
+  .progress-fill { height: 100%; background: var(--primary); border-radius: 2px; transition: width 0.4s cubic-bezier(0.4,0,0.2,1); }
+
+  .quiz-body { padding: 20px 24px 48px; }
+
+  .dim-tag {
+    display: inline-flex; padding: 4px 10px;
+    background: var(--tag-bg); border-radius: 100px;
+    font-size: 10px; color: var(--text-hint); letter-spacing: 0.3px;
+    margin-bottom: 16px;
+  }
+
+  .question-text {
+    font-size: 17px; font-weight: 500; color: var(--text-dark);
+    line-height: 1.85; margin-bottom: 24px; letter-spacing: 0.2px;
+  }
+
+  .options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+
+  .option {
+    display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px;
+    background: #fff; border: 1.5px solid var(--border); border-radius: 12px;
+    cursor: pointer; user-select: none;
+    transition: background 0.18s, border-color 0.18s;
+  }
+  .option:active { transform: scale(0.99); }
+  .option.selected { background: var(--primary-light); border-color: var(--primary); }
+
+  .option-letter {
+    flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--tag-bg); display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 500; color: var(--text-hint);
+    transition: background 0.18s, color 0.18s; margin-top: 1px;
+  }
+  .option.selected .option-letter { background: var(--primary); color: #fff; }
+
+  .option-text { flex: 1; font-size: 14px; line-height: 1.7; color: var(--text-mid); transition: color 0.18s; }
+  .option.selected .option-text { color: var(--text-dark); }
+
+  .quiz-hint { text-align: center; font-size: 11px; color: var(--text-hint); letter-spacing: 0.3px; }
+
+  /* ── LOADING ── */
+  #screen-loading { align-items: center; justify-content: center; }
+  .loading-dots { display: flex; gap: 8px; justify-content: center; margin-bottom: 22px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); animation: dp 1.4s ease-in-out infinite; }
+  .dot:nth-child(2) { animation-delay: .2s; }
+  .dot:nth-child(3) { animation-delay: .4s; }
+  @keyframes dp { 0%,80%,100%{transform:scale(.6);opacity:.35} 40%{transform:scale(1);opacity:1} }
+  .loading-text { font-size: 14px; color: var(--text-hint); letter-spacing: 0.3px; }
+
+  /* ── RESULT ── */
+  #screen-result { min-height: 100%; padding-bottom: 60px; }
+
+  .result-header { padding: 28px 24px 24px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+  .result-brand { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+  .result-brand-name { font-size: 12px; font-weight: 500; color: var(--text-mid); }
+
+  .result-landing {
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg) 100%);
+    border-radius: 16px; padding: 22px; border: 1px solid var(--border);
+  }
+  .result-landing-title { font-size: 15px; font-weight: 600; color: var(--text-dark); margin-bottom: 10px; }
+  .result-landing-body { font-size: 13px; line-height: 1.9; color: var(--text-mid); }
+  .result-landing-quote {
+    margin-top: 14px; padding: 12px 16px;
+    border-left: 2px solid var(--primary);
+    background: rgba(196,149,106,0.06);
+    border-radius: 0 8px 8px 0;
+    font-size: 13px; color: var(--text-dark); line-height: 1.7; font-style: italic;
+  }
+
+  /* Radar */
+  .radar-section { padding: 0 24px 24px; }
+  .section-label { font-size: 11px; color: var(--text-hint); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
+
+  .radar-wrap {
+    background: #fff; border-radius: 16px; border: 1px solid var(--border);
+    padding: 20px; display: flex; flex-direction: column; align-items: center;
+  }
+  .radar-canvas-wrap { width: 100%; max-width: 280px; }
+  .radar-note {
+    margin-top: 12px;
+    font-size: 11px; color: var(--text-hint); line-height: 1.7;
+    text-align: center; letter-spacing: 0.2px;
+    padding: 0 8px;
+  }
+
+  .tier-legend { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-top: 16px; }
+  .tier-chip { display: flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 100px; font-size: 11px; border: 1px solid transparent; }
+  .tier-chip-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .chip-low  { background:#EEF5EE; color:#5A8060; border-color:#C8DEC8; }
+  .chip-mid  { background:#FFF4E8; color:#C4956A; border-color:#EDD4B5; }
+  .chip-high { background:#FBEEED; color:#B5615A; border-color:#E8C0BD; }
+  .dot-low   { background:#6BA87A; }
+  .dot-mid   { background:#C4956A; }
+  .dot-high  { background:#B5615A; }
+
+  /* Dim cards */
+  .dims-section { padding: 0 24px; display: flex; flex-direction: column; gap: 14px; }
+
+  .dim-card { background: #fff; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .dim-card-header { padding: 18px 20px 14px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--border); }
+  .dim-card-left { flex: 1; }
+  .dim-card-num { font-size: 10px; color: var(--text-hint); letter-spacing: 0.5px; margin-bottom: 4px; }
+  .dim-card-title { font-size: 15px; font-weight: 600; color: var(--text-dark); line-height: 1.5; }
+  .dim-card-badge { flex-shrink:0; padding:3px 10px; border-radius:100px; font-size:10px; font-weight:500; letter-spacing:0.3px; margin-top:2px; }
+  .badge-low  { background:#EEF5EE; color:#5A8060; }
+  .badge-mid  { background:#FFF4E8; color:#C4956A; }
+  .badge-high { background:#FBEEED; color:#B5615A; }
+
+  .dim-card-body { padding: 16px 20px; }
+  .dim-card-content { font-size:13px; line-height:1.85; color:var(--text-mid); }
+  .dim-card-content p { margin-bottom:10px; }
+  .dim-card-content p:last-child { margin-bottom:0; }
+
+  /* QR section */
+  .qr-section {
+    margin: 24px 24px 0;
+    background: linear-gradient(150deg, #3D3530 0%, #52443C 100%);
+    border-radius: 20px; padding: 28px 24px;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+  }
+  .qr-eyebrow { font-size:10px; letter-spacing:2px; color:rgba(255,255,255,0.4); text-transform:uppercase; margin-bottom:14px; }
+  .qr-title { font-size:17px; font-weight:600; color:rgba(255,255,255,0.95); line-height:1.6; margin-bottom:8px; }
+  .qr-desc { font-size:13px; color:rgba(255,255,255,0.55); line-height:1.8; margin-bottom:22px; max-width:260px; }
+
+  .qr-box {
+    width:148px; height:148px; background:#fff; border-radius:14px;
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom:14px; overflow:hidden;
+  }
+  .qr-placeholder { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:12px; }
+  .qr-placeholder svg { flex-shrink:0; }
+  .qr-placeholder-hint { font-size:9px; color:var(--text-hint); letter-spacing:0.3px; }
+  .qr-image { width:120px; height:120px; object-fit:contain; display:none; }
+
+  .qr-label { font-size:11px; color:rgba(255,255,255,0.45); letter-spacing:0.3px; margin-bottom:10px; }
+  .qr-wechat-row { display:flex; align-items:center; gap:8px; }
+  .qr-wechat-id { font-size:14px; font-weight:500; color:rgba(255,255,255,0.8); letter-spacing:0.5px; }
+  .btn-copy-id {
+    padding:4px 10px; background:rgba(196,149,106,0.2); color:var(--primary);
+    border:1px solid rgba(196,149,106,0.4); border-radius:100px; font-size:11px;
+    cursor:pointer; font-family:inherit; transition:background 0.2s;
+  }
+  .btn-copy-id:active { background:rgba(196,149,106,0.4); }
+
+  .qr-convert-hint {
+    margin-top:18px; padding:14px 18px;
+    background:rgba(196,149,106,0.1); border-radius:12px;
+    border:1px solid rgba(196,149,106,0.2); width:100%;
+  }
+  .qr-convert-hint-text { font-size:12px; color:rgba(255,255,255,0.6); line-height:1.8; }
+  .qr-convert-hint-text strong { color:var(--primary); font-weight:500; }
+
+  .result-footer { margin-top:24px; padding:0 24px; text-align:center; }
+  .result-footer-text {
+    font-size: 11px; color: var(--text-mid); line-height: 1.9;
+    padding: 16px 18px;
+    background: #fff; border-radius: 12px; border: 1px solid var(--border);
+    display: inline-block; text-align: left; width: 100%;
+  }
+  .result-footer-text strong { color: var(--text-hint); font-weight: 500; }
+
+  @media (max-width:360px) { .question-text{font-size:16px;} .option-text{font-size:13px;} }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- START -->
+<div id="screen-start" class="screen active">
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:48px 32px;">
+    <div class="start-inner">
+      <div class="brand-mark">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <line x1="20" y1="34" x2="20" y2="10" stroke="#C4956A" stroke-width="1" stroke-linecap="round"/>
+          <path d="M20 22 Q10 16 10 8 Q18 8 20 18" fill="#C4956A" opacity="0.75"/>
+          <path d="M20 18 Q22 8 30 8 Q30 16 20 22" fill="#C4956A" opacity="0.4"/>
+          <circle cx="20" cy="34" r="2" fill="#C4956A"/>
+        </svg>
+        <div class="brand-name">咏亦进化论</div>
+        <div class="brand-sub">原生家庭自我觉察测量表</div>
+        <div class="brand-credential">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <circle cx="5" cy="5" r="4.5" stroke="#A89F90" stroke-width="0.8"/>
+            <path d="M3 5l1.5 1.5L7 3.5" stroke="#A89F90" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          基于 4 个国际心理学研究框架
+        </div>
+      </div>
+
+      <div class="start-quote-block">
+        <div class="start-quote-en">"All feelings are valid, including the ones you've been trying to hide."</div>
+        <div class="start-quote-zh">所有的情绪都值得被看见，包括那些你一直试图藏起来的。</div>
+      </div>
+
+      <div class="start-divider"></div>
+      <div class="start-desc">
+        接下来的18道题，没有对错，没有好坏。<br>
+        只是邀请你回头看一眼——<br>
+        那个在某个家庭里长大的你，<br>
+        是怎么学会跟自己、跟别人相处的。<br><br>
+        选第一直觉的那个答案就好。<br>
+        那个最快闪过的感觉，往往是最真的。
+      </div>
+      <div class="start-meta">
+        <div class="meta-item"><span class="meta-num">18</span><span class="meta-label">道题目</span></div>
+        <div class="meta-item"><span class="meta-num">5</span><span class="meta-label">个维度</span></div>
+        <div class="meta-item"><span class="meta-num">5</span><span class="meta-label">分钟</span></div>
+      </div>
+      <button class="btn-primary" onclick="startQuiz()">开始了解自己 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="screen-quiz" class="screen">
+  <div class="quiz-header">
+    <div class="quiz-top">
+      <div class="quiz-brand">
+        <svg width="20" height="20" viewBox="0 0 40 40" fill="none">
+          <line x1="20" y1="34" x2="20" y2="10" stroke="#C4956A" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M20 22 Q10 16 10 8 Q18 8 20 18" fill="#C4956A" opacity="0.75"/>
+          <path d="M20 18 Q22 8 30 8 Q30 16 20 22" fill="#C4956A" opacity="0.4"/>
+          <circle cx="20" cy="34" r="2" fill="#C4956A"/>
+        </svg>
+        <span class="quiz-brand-name">咏亦进化论</span>
+      </div>
+      <div class="quiz-counter"><span id="q-current">1</span> / 18</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  </div>
+  <div class="quiz-body">
+    <div class="dim-tag" id="dim-tag"></div>
+    <div class="question-text" id="question-text"></div>
+    <div class="options" id="options-list"></div>
+    <div class="quiz-hint">选第一直觉的那个答案就好</div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="screen-loading" class="screen">
+  <div style="text-align:center;">
+    <div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="loading-text">正在为你生成专属报告……</div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="screen-result" class="screen">
+
+  <div class="result-header">
+    <div class="result-brand">
+      <svg width="22" height="22" viewBox="0 0 40 40" fill="none">
+        <line x1="20" y1="34" x2="20" y2="10" stroke="#C4956A" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M20 22 Q10 16 10 8 Q18 8 20 18" fill="#C4956A" opacity="0.75"/>
+        <path d="M20 18 Q22 8 30 8 Q30 16 20 22" fill="#C4956A" opacity="0.4"/>
+        <circle cx="20" cy="34" r="2" fill="#C4956A"/>
+      </svg>
+      <span class="result-brand-name">咏亦进化论｜你的觉察报告</span>
+    </div>
+    <div class="result-landing">
+      <div class="result-landing-title">你答完了。</div>
+      <div class="result-landing-body">
+        花了几分钟，回头看了一眼那个长大的过程。<br>
+        这件事本身，已经需要一点勇气。<br><br>
+        下面你会看到五个维度的结果。<br>
+        不管看到什么，请先记住这一句话——
+      </div>
+      <div class="result-landing-quote">你所有的模式，都曾经保护过你。</div>
+    </div>
+  </div>
+
+  <div class="radar-section">
+    <div class="section-label">五维概览</div>
+    <div class="radar-wrap">
+      <div class="radar-canvas-wrap"><canvas id="radar-chart"></canvas></div>
+      <div class="tier-legend">
+        <div class="tier-chip chip-low"><div class="tier-chip-dot dot-low"></div>觉察期</div>
+        <div class="tier-chip chip-mid"><div class="tier-chip-dot dot-mid"></div>困扰期</div>
+        <div class="tier-chip chip-high"><div class="tier-chip-dot dot-high"></div>卡住期</div>
+      </div>
+      <div class="radar-note">图形越向外，代表该维度需要关注的内容越少；越向内，越值得深入探索。</div>
+    </div>
+  </div>
+
+  <div class="dims-section" id="dims-section"></div>
+
+  <div class="qr-section">
+    <div class="qr-eyebrow">下一步</div>
+    <div class="qr-title" id="qr-title">你看见的这些，值得被认真对待。</div>
+    <div class="qr-desc" id="qr-desc">扫码添加咏亦，免费领取完整知识库，还有每周答疑陪你继续走。</div>
+    <div class="qr-box">
+      <!-- ① 有真实二维码图片：取消下面这行注释，填入图片路径 -->
+      <!-- <img class="qr-image" id="qr-img" src="YOUR_QR_IMAGE.jpg" alt="咏亦二维码" style="display:block;width:120px;height:120px;object-fit:contain;"> -->
+      <!-- ② 占位图（无图片时显示） -->
+      <div class="qr-placeholder">
+        <svg width="108" height="108" viewBox="0 0 108 108" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- top-left finder -->
+          <rect x="6"  y="6"  width="28" height="28" rx="4" fill="#3D3530"/>
+          <rect x="11" y="11" width="18" height="18" rx="2" fill="#FAF8F5"/>
+          <rect x="15" y="15" width="10" height="10" rx="1.5" fill="#3D3530"/>
+          <!-- top-right finder -->
+          <rect x="74" y="6"  width="28" height="28" rx="4" fill="#3D3530"/>
+          <rect x="79" y="11" width="18" height="18" rx="2" fill="#FAF8F5"/>
+          <rect x="83" y="15" width="10" height="10" rx="1.5" fill="#3D3530"/>
+          <!-- bottom-left finder -->
+          <rect x="6"  y="74" width="28" height="28" rx="4" fill="#3D3530"/>
+          <rect x="11" y="79" width="18" height="18" rx="2" fill="#FAF8F5"/>
+          <rect x="15" y="83" width="10" height="10" rx="1.5" fill="#3D3530"/>
+          <!-- data modules -->
+          <rect x="44" y="6"  width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="54" y="6"  width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="44" y="16" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="58" y="22" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="44" y="28" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="6"  y="44" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="16" y="44" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="28" y="44" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="6"  y="56" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="22" y="56" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="6"  y="66" width="6" height="6" rx="1" fill="#3D3530"/>
+          <!-- center accent dots -->
+          <rect x="44" y="44" width="6" height="6" rx="1" fill="#C4956A"/>
+          <rect x="54" y="44" width="6" height="6" rx="1" fill="#C4956A"/>
+          <rect x="66" y="44" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="78" y="44" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="90" y="44" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="44" y="54" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="58" y="54" width="6" height="6" rx="1" fill="#C4956A"/>
+          <rect x="72" y="54" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="84" y="54" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="44" y="66" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="58" y="66" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="70" y="66" width="6" height="6" rx="1" fill="#C4956A"/>
+          <rect x="82" y="66" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="44" y="78" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="58" y="78" width="6" height="6" rx="1" fill="#C4956A"/>
+          <rect x="70" y="78" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="82" y="78" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="44" y="90" width="6" height="6" rx="1" fill="#C4956A"/>
+          <rect x="58" y="90" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="72" y="96" width="6" height="6" rx="1" fill="#3D3530"/>
+          <rect x="84" y="90" width="6" height="6" rx="1" fill="#C4956A"/>
+        </svg>
+        <div class="qr-placeholder-hint">替换为你的真实二维码</div>
+      </div>
+    </div>
+    <div class="qr-label">长按识别 · 添加咏亦</div>
+    <div class="qr-wechat-row">
+      <span class="qr-wechat-id" id="wechat-id-display">微信号：yongyi_xxx</span>
+      <button class="btn-copy-id" onclick="copyWechatId()">复制</button>
+    </div>
+    <div class="qr-convert-hint">
+      <div class="qr-convert-hint-text" id="convert-hint-text">
+        添加后发送暗号 <strong>「测量表」</strong>，免费获取完整觉察报告 + 知识库目录。
+      </div>
+    </div>
+  </div>
+
+  <div class="result-footer">
+    <div class="result-footer-text">
+      <strong>研究框架来源</strong><br>
+      依恋理论（Bowlby & Ainsworth）· 内在小孩理论（John Bradshaw）<br>
+      ACE童年创伤研究框架（Felitti等，1998）· 自我决定理论（Deci & Ryan）<br><br>
+      本测量表仅供自我觉察参考，不构成临床心理诊断。
+    </div>
+  </div>
+
+</div><!-- /result -->
+</div><!-- /app -->
+
+<script>
+// ═══════════════════════════════════════════
+// ① 修改这里填入你的真实信息
+// ═══════════════════════════════════════════
+const CONFIG = {
+  wechatId:     'yongyi7641',
+  qrImagePath:  'qr.jpg',
+  airtableToken:  'YOUR_AIRTABLE_TOKEN',
+  airtableBaseId: 'YOUR_BASE_ID',
+  airtableTable:  'Quiz Results',
+};
+
+// ═══════════════════════════════════════════
+// 维度定义（5个，正五边形）
+// ═══════════════════════════════════════════
+const DIMS = [
+  { name:'与父母的关系',    fullName:'与父母的关系模式',    radarLabel:'父母关系', qs:[0,1,2,3]     },
+  { name:'自我价值感',      fullName:'自我价值感',          radarLabel:'自我价值', qs:[4,5,6]       },
+  { name:'亲密关系',        fullName:'亲密关系与安全感',    radarLabel:'亲密安全', qs:[7,8,9,10]    },
+  { name:'边界与说「不」',  fullName:'边界与说「不」的能力',radarLabel:'边界能力', qs:[11,12,13,14] },
+  { name:'金钱与匮乏感',    fullName:'金钱与匮乏感',        radarLabel:'金钱匮乏', qs:[15,16,17]    },
+];
+
+// ═══════════════════════════════════════════
+// 题目
+// ═══════════════════════════════════════════
+const QUESTIONS = [
+  {dim:0,text:'小时候，你做了一个父母不满意的决定，结果通常是？',opts:['直接被否定，必须改','他们没说，但我能感觉到，然后我自己改了','嘴上说让我自己决定，出了事就说"谁让你不听我的"','没什么反应，他们不太管这些']},
+  {dim:0,text:'小时候心里有难受的事，你会跟父母说吗？',opts:['会说，说了会好一点','说过，但说了反而更糟，后来就不说了','不会说，说了他们也不会在意','不会说，他们自己已经很累了，我不能再让他们难受']},
+  {dim:0,text:'那个时候在家，你整个人是什么感觉？',opts:['放松的，家是最安全的地方','不太放松，随时在看大人脸色','说不清，但某些声音会让我莫名紧张——开门声、脚步声、某种语气','没什么感觉，那段时间很模糊']},
+  {dim:0,text:'现在接到父母电话的那一秒，你的第一反应是？',opts:['没什么感觉，正常接','会先想：他们这次找我干嘛','身体先有反应——心跳、胸口发紧，想拖一拖再接','不想接，划掉']},
+  {dim:1,text:'小时候，家里气氛好不好，你觉得跟你的表现有关系吗？',opts:['没关系，不管我怎样他们都对我挺好的','有一点关系，表现好他们会更开心','关系很大，我知道什么样的自己才让他们满意','几乎全靠我——我得小心维持，稍微不对气氛就变了']},
+  {dim:1,text:'小时候，你有没有听过类似这样的话——"你看看别人家孩子"、"你怎么就不能像xx一样"？',opts:['没有，父母很少拿我跟别人比','偶尔有，但不是常态','经常有，我很熟悉那种被比下去的感觉','太熟悉了，我好像从来没赢过那场比较']},
+  {dim:1,text:'小时候，你有没有因为提出自己的需求，被说过"你怎么这么自私"、"想那么多干嘛"、"你要求真多"？',opts:['没有，我的需求基本会被认真对待','偶尔有，但不影响我开口','有过，后来我就不太敢开口了','有，而且我现在还是觉得——提出需求是给别人添麻烦']},
+  {dim:2,text:'在亲密关系里，对方没有及时回消息或者态度有点冷淡，你通常会？',opts:['没什么感觉，等他回就好了','会注意到，但能告诉自己别想太多','开始反复想：是不是我做错了什么','很难受，脑子里会演很多剧情，停不下来']},
+  {dim:2,text:'当一段关系变得越来越亲密，对方开始更依赖你、更需要你的时候，你的感觉是？',opts:['很好，这正是我想要的','喜欢，但偶尔需要自己待一待','有点不自在，会想保持一点距离','明显感觉到压力，甚至想找理由退出']},
+  {dim:2,text:'你有没有过这种体验：非常渴望跟某个人亲近，但真的亲近了之后，又开始觉得不对劲、想推开？',opts:['没有，我在关系里比较稳定','偶尔有，但不是很强烈','有，我自己也不太明白为什么会这样','经常有，我好像同时在渴望和逃跑']},
+  {dim:2,text:'在你最长的一段亲密关系里，最接近你的是哪一种？',opts:['比较安心，就算有摩擦也觉得关系是稳的','患得患失，很在意对方的反应和态度','保持距离，不太愿意让对方看见自己脆弱的部分','又想靠近又想逃，自己都觉得自己很难搞']},
+  {dim:3,text:'父母提出一个你其实不太想做的要求，你通常会？',opts:['直接说不，说清楚我的想法','会想想怎么说，但最后说得出来','很难拒绝，通常找个理由绕过去，或者硬撑着答应','答应了——有时候甚至没意识到自己不想做，就已经答应了']},
+  {dim:3,text:'当你拒绝了别人的请求之后，通常是什么感觉？',opts:['没什么，我有权利说不','会想一想，但不会太纠结','会内疚，觉得自己是不是太自私了','很难受，会反复回想，甚至想找机会补救回来']},
+  {dim:3,text:'有没有过这种情况：你答应了某件事，但不是真的想做——只是不想让气氛变难，或者怕关系出问题？',opts:['很少，我答应的事基本是真心愿意的','偶尔有，但不是主要原因','经常有，答应是为了让场面过去','几乎每次——我很难分清楚，哪些是真的愿意，哪些只是不想起冲突']},
+  {dim:3,text:'有没有人替你做过一个决定——你当时没觉得哪里不对，甚至觉得挺好的，后来才反应过来不对劲？',opts:['没有，我对这类事比较敏感，会注意到','有过，但我后来意识到了那不太对','有，我隐约觉得哪里不对，但说不清楚','有，而且我现在回想起来才发现——那件事其实轮不到他们决定']},
+  {dim:4,text:'小时候，家里谈到钱这件事，通常是什么氛围？',opts:['比较正常，钱够用，不是敏感话题','偶尔紧张，但不是家里的主旋律','很敏感，跟钱有关的话题容易引发焦虑或争吵','钱是压在家里的一块石头——匮乏感是我童年最清晰的记忆之一']},
+  {dim:4,text:'当你花钱在自己身上——买喜欢的东西、享受一顿好饭、给自己升个舱——你通常是什么感觉？',opts:['很自然，我值得','会高兴，但偶尔有一点"是不是太贵了"','会有负罪感，觉得这钱花得不该','很难做到，在自己身上花钱这件事本身就让我不舒服']},
+  {dim:4,text:'情绪不好的时候，买东西会让你暂时好受一点，但买完那个空洞还在。你熟悉这种感觉吗？',opts:['不熟悉，我买东西比较理性','偶尔有，但不是主要的情绪出口','有，购物会让我暂时好一点，但解决不了根本问题','很熟悉，那种"买了还是空"的感觉我太了解了']},
+];
+
+// ═══════════════════════════════════════════
+// 结果文案
+// ═══════════════════════════════════════════
+const DIM_TITLES = [
+  ['你开始看见那段关系了','那段关系，还住在你身体里','你一直在那个家的影子里生活'],
+  ['你和自己的关系，值得被好好看见','你一直在用表现，证明自己值得','那个「我不够好」的声音，跟了你很久了'],
+  ['你在关系里，有自己的节奏','在最亲近的人面前，你还是会绷着','靠近这件事，对你来说从来不简单'],
+  ['你知道自己想要什么','说「不」之前，你要过很多关','你已经习惯了把自己放在最后'],
+  ['你和钱的关系，基本稳定','在自己身上花钱，你总是要想很久','那个「我不配拥有」的感觉，比你以为的更深'],
+];
+
+const DIM_CONTENT = [
+  [
+    '你和父母之间，有一些没说出口的东西。也许是某种客气，也许是某种距离。你感觉得到，但说不太清楚。\n\n这道题你能答出来，说明你已经开始注意到这个关系里的纹路了——这本身就是觉察的开始。\n\n每一段亲子关系，都在塑造我们对"权力"和"安全"的理解。你的成长环境，让你学会了一些规则——什么时候该说话，什么时候该安静，什么样的自己是被接受的。这些规则现在可能还在运作，只是你还没完全看见它们。\n\n你学会的这些，不是软弱，是适应。下一步不是要评判父母，也不是要评判自己，而是带着好奇心，继续往里看。',
+    '你和父母的关系，在你身上留下了一些印记。也许是每次接到他们电话时那一秒的紧绷，也许是某些话永远说不出口，也许是你已经离开家很多年，但那种感觉还在。\n\n研究显示，长期处于控制型或情感缺席的家庭环境中的孩子，成年后在自主性、情绪调节和亲密关系方面，往往需要花更多的力气——不是因为他们不够好，而是因为他们的神经系统被训练成了另一种模式。\n\n你学会察言观色，学会不给别人添麻烦，学会在不安全的地方找到安全感——这些能力在童年是你的盔甲。盔甲在战场上是必要的，但你现在已经不在那个战场了。\n\n下一步是慢慢分清楚：哪些反应是当下真实需要的，哪些是旧的保护机制在自动运作。',
+    '你和父母的关系，深深刻在了你的身体里。接到电话时的那一秒，回家前的那种感觉，某些声音或者语气带来的反应——这些不是你想象出来的，这是真实的。\n\nACE研究（童年不良经历研究）表明，这类经历对成年后的情绪调节、关系模式和自我认知，会产生深远且持续的影响。\n\n你在那样的环境里活下来了。你发展出了极强的感知力，能够读懂别人的情绪，能够在高压环境下保持运转。这些不是小事，这需要巨大的内在力量。\n\n你现在需要的，不是更多的自我分析，而是一个真正安全的空间——在那里，你可以慢慢放下那副盔甲，让那个还停留在过去的小孩知道：现在不一样了。',
+  ],
+  [
+    '你对自己的感觉，大部分时候还算稳定。但某些时刻——被批评的时候，被比较的时候，提出需求之前——会有一点点什么东西动了一下。\n\n自我价值感，是在早期关系里一点一点建立起来的。当一个孩子的喜悦被接住、需求被认真对待、本身的存在被珍视，他会慢慢学会：我是值得的。\n\n你学会了不轻易依赖别人的认可，学会了自己撑住自己。这是一种真实的能力。\n\n带着好奇心注意那些"动了一下"的时刻，问问自己：那个瞬间发生了什么？',
+    '你对自己的感觉，有时候稳，有时候不稳。别人夸你，你可能接不太住；提出自己的需求之前，你会先在心里转好几圈；偶尔会有一种说不清楚的"我好像不太够好"的感觉。\n\n在比较性贬低的环境里长大的孩子，会把那把尺子内化进自己的脑子里，然后用它来量自己，一辈子。在条件性被爱的环境里长大的孩子，会学会：我的价值是表现出来的，不是天生就有的。\n\n这不是你的性格，这是你学到的一套信念系统。学来的东西，是可以重新学的。\n\n从一件小事开始：下一次你有需求的时候，试着说出来。不需要解释，不需要道歉。就说出来。',
+    '你和自己的关系，可能比你和任何人的关系都更难。那个"我不够好"的声音，可能从很早就在了，早到你已经把它当成了事实。\n\nIFS（内部家庭系统疗法）的研究表明，内化的批评者最初的目的是保护你——如果我先批评自己，外部的批评就不那么疼了。它是你的一部分，但它不是全部的你，更不是真相。\n\n你用那个严格要求自己的声音撑过了很多。你现在需要的，不是更多的努力，而是一次真正的重新认识自己——不是通过表现，不是通过别人的眼睛，而是从你本来的样子开始。\n\n那个"我值得"的感觉，是可以在你自己身上长出来的。',
+  ],
+  [
+    '你在亲密关系里，大部分时候还算自在。但有时候会有一些小的波动——对方的一个态度，一段沉默，会让你有点不确定。\n\n依恋理论告诉我们，我们在亲密关系里的行为模式，是在生命最早期的关系里学来的。你发展出了一定的关系弹性。\n\n注意那些小的波动时刻——带着好奇心问：这个时候，我在担心什么？',
+    '你在亲密关系里，有一种隐隐的不安。可能是患得患失，可能是想保持距离，可能是渴望靠近但靠近了又觉得哪里不对。\n\nAinsworth的依恋研究表明，当早期照顾者的回应是不稳定的、缺席的，孩子会发展出焦虑型、回避型或混乱型的依恋模式——本质上是神经系统学会了一件事：亲密关系里有风险，要小心。\n\n这不是你的性格缺陷，这是一个学习的结果。改变依恋模式，不是靠意志力，而是靠经历——经历一段真实的、稳定的、安全的关系，让神经系统慢慢学会：这里不一样，可以放松一点。',
+    '亲密关系对你来说，可能是最难的一件事。不是因为你不想要，而是因为那里有太多相互矛盾的东西——渴望又害怕，靠近又逃开。\n\n混乱型依恋，通常来自一个特殊的困境：那个应该给你安全感的人，同时也是让你感到不安的人。\n\n依恋创伤是可以被修复的——前提是要先被看见，再被理解，然后才是改变。你现在需要的，是一个足够稳定的关系作为"安全基地"——在那里，你可以慢慢练习：靠近，不会消失；脆弱，不会被利用。',
+  ],
+  [
+    '你大部分时候能够照顾自己的需求，但偶尔会发现自己答应了一些本来不太想做的事，或者说了"没关系"但其实有一点关系。\n\n你已经能感觉到这个区别——这是边界意识开始清晰的信号。\n\n下一次注意那个"有一点关系"的感觉出现的时刻——不需要马上行动，先只是注意它，听清楚它在说什么。',
+    '说"不"对你来说，不是一件自然的事。可能是开口之前要在心里转好几圈，可能是说完之后内疚很久。\n\n在边界被长期忽视的成长环境里，孩子会把一件事内化成信念：我的需求不重要，提出来是给别人添麻烦。\n\n在一个不允许你有需求的环境里，压下去自己的感受，是你保持关系、保持安全的方式。那不是懦弱，那是适应。\n\n边界不是冷漠，不是自私，是让关系可以长久的基础。从最小的一件事开始：下一次有人问你"你想吃什么"，说出你真正想吃的那个。',
+    '你和"自己的需求"之间，可能有一道很深的沟。不只是说不出"不"，有时候甚至在别人已经替你做了决定之后，你才慢慢反应过来。\n\n长期压抑自我需求，会导致大脑对自身内部信号的感知能力下降——你不是不知道自己想要什么，是那个感知的通道，慢慢关掉了。\n\n你学会了把自己变得很小，让别人很舒服。你是用自己的需求，换来了一个可以生存的空间。\n\n重建边界，先重新学会感知自己——你现在感觉怎么样？你现在想要什么？从问自己开始，不需要马上告诉任何人。',
+  ],
+  [
+    '你和钱的关系，大体上还算稳定。但偶尔会有一点什么——在自己身上花钱时的一丝犹豫，或者对"够不够"的隐隐担心。\n\n我们和金钱的关系，最早是在家里的氛围里建立的。\n\n注意下一次那个"犹豫"出现的时刻——问一句：这个犹豫在保护我什么？',
+    '你和钱之间，有一种微妙的张力。给别人花钱很大方，给自己花钱要想很久。\n\nDeci & Ryan的自我决定理论指出，当一个人的基本心理需求长期得不到满足，匮乏感会泛化到生活的各个层面。"我不配拥有"的感觉，和"钱不够用"的感觉，来自同一个根源。\n\n下一次在自己身上花钱之前，试着先问自己：我值得这个吗？不需要答案是"是"，只需要把这个问题问出来。',
+    '你和钱的关系，可能折射出你和自己的关系——总觉得不够，总觉得自己不配拥有太好的，在自己身上花钱会有一种莫名的负罪感，但给别人花钱却很少说不。\n\nACE研究显示，童年期经济匮乏或情感匮乏的经历，对成年后的金钱焦虑和消费模式都有显著的预测性影响。\n\n改变和钱的关系，最终是改变和自己的关系。从一件很小的事开始：这周，花一笔只属于你自己的钱，不需要解释，不需要让任何人受益。就是你，就是因为你值得。',
+  ],
+];
+
+const QR_COPY = {
+  low: {
+    title: '你刚刚打开了一扇门。',
+    desc:  '加咏亦，我们一起往里走。',
+    hint:  '添加后发送暗号 <strong>「测量表」</strong>，咏亦会和你聊聊你的结果，以及接下来可以怎么走。',
+  },
+  mid: {
+    title: '你看见了，这已经很不容易。',
+    desc:  '加咏亦，聊聊接下来怎么走。',
+    hint:  '添加后发送暗号 <strong>「测量表」</strong>，咏亦会给你发一份专属的下一步建议。',
+  },
+  high: {
+    title: '你一个人扛了太久了。',
+    desc:  '加咏亦，我们来认真谈谈怎么走出来——活出真正的自己。',
+    hint:  '添加后发送暗号 <strong>「测量表」</strong>，咏亦会第一时间回复你，我们从你的结果开始谈。',
+  },
+};
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let currentQ = 0;
+let answers  = new Array(18).fill(null);
+let radarChart = null;
+
+// ═══════════════════════════════════════════
+// SCREEN
+// ═══════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const s = document.getElementById('screen-' + id);
+  s.classList.add('active');
+  s.scrollTop = 0;
+}
+
+// ═══════════════════════════════════════════
+// QUIZ
+// ═══════════════════════════════════════════
+function startQuiz() {
+  currentQ = 0;
+  answers  = new Array(18).fill(null);
+  renderQuestion();
+  showScreen('quiz');
+}
+
+function renderQuestion() {
+  const q      = QUESTIONS[currentQ];
+  const dimIdx = q.dim;
+
+  document.getElementById('q-current').textContent    = currentQ + 1;
+  document.getElementById('progress-fill').style.width = ((currentQ / 18) * 100) + '%';
+  document.getElementById('dim-tag').textContent       = `维度${'一二三四五'[dimIdx]}｜${DIMS[dimIdx].name}`;
+  document.getElementById('question-text').textContent  = q.text;
+
+  const list = document.getElementById('options-list');
+  list.innerHTML = '';
+  ['A','B','C','D'].forEach((letter, i) => {
+    const div = document.createElement('div');
+    div.className = 'option' + (answers[currentQ] === i ? ' selected' : '');
+    div.innerHTML = `<div class="option-letter">${letter}</div><div class="option-text">${q.opts[i]}</div>`;
+    div.addEventListener('click', () => selectOption(i));
+    list.appendChild(div);
+  });
+}
+
+function selectOption(idx) {
+  answers[currentQ] = idx;
+  document.querySelectorAll('.option').forEach((el, i) =>
+    el.classList.toggle('selected', i === idx)
+  );
+  setTimeout(advanceQuiz, 360);
+}
+
+function advanceQuiz() {
+  currentQ++;
+  if (currentQ >= 18) { showLoading(); return; }
+  renderQuestion();
+  document.getElementById('screen-quiz').scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showLoading() {
+  showScreen('loading');
+  setTimeout(() => {
+    buildResult();
+    submitToAirtable();
+    showScreen('result');
+  }, 2800);
+}
+
+// ═══════════════════════════════════════════
+// SCORING
+// 原始pct: 0=最健康, 1=最严重
+// 展示分(displayPct) = 1 - pct，这样图形越大=越健康，符合雷达图直觉
+// 分档基于原始pct:
+//   0–33%原始 → 觉察期(tier=0)  展示67–100% 图形大
+//   34–66%原始 → 困扰期(tier=1) 展示34–66%  图形中
+//   67–100%原始 → 卡住期(tier=2) 展示0–33%  图形小
+// ═══════════════════════════════════════════
+function calcScores() {
+  return DIMS.map(dim => {
+    const raw = dim.qs.reduce((s, qi) => s + (answers[qi] !== null ? answers[qi] + 1 : 1), 0);
+    const min = dim.qs.length * 1;
+    const max = dim.qs.length * 4;
+    const pct = (raw - min) / (max - min);        // 原始比例：高=严重
+    const displayPct = 1 - pct;                    // 展示比例：高=健康
+    let tier;
+    if      (pct <= 0.33) tier = 0;  // 觉察期
+    else if (pct <= 0.66) tier = 1;  // 困扰期
+    else                  tier = 2;  // 卡住期
+    return { raw, min, max, pct, displayPct, tier };
+  });
+}
+
+function overallTier(scores) {
+  const avg = scores.reduce((s, d) => s + d.tier, 0) / scores.length;
+  if (avg < 0.5) return 'low';
+  if (avg < 1.6) return 'mid';
+  return 'high';
+}
+
+// ═══════════════════════════════════════════
+// BUILD RESULT
+// ═══════════════════════════════════════════
+const TIER_LABELS = ['觉察期', '困扰期', '卡住期'];
+const BADGE_CLS   = ['badge-low', 'badge-mid', 'badge-high'];
+const NUM_ZH      = ['一','二','三','四','五'];
+
+// Point color per tier
+const POINT_COLORS = ['rgba(106,168,122,1)', 'rgba(196,149,106,1)', 'rgba(181,97,90,1)'];
+
+function buildResult() {
+  const scores = calcScores();
+  buildRadar(scores);
+  buildCards(scores);
+  buildQR(scores);
+}
+
+function buildRadar(scores) {
+  if (radarChart) { radarChart.destroy(); radarChart = null; }
+
+  const ctx         = document.getElementById('radar-chart').getContext('2d');
+  // 使用展示分（反转后）：越大=越健康，图形越大
+  const displayData = scores.map(s => Math.round(s.displayPct * 100));
+  const pointColors = scores.map(s => POINT_COLORS[s.tier]);
+
+  radarChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: DIMS.map(d => d.radarLabel),
+      datasets: [{
+        data: displayData,
+        borderColor:          'rgba(196,149,106,0.65)',
+        backgroundColor:      'rgba(196,149,106,0.09)',
+        borderWidth:          1.5,
+        pointBackgroundColor: pointColors,
+        pointBorderColor:     pointColors,
+        pointRadius:          5,
+        pointHoverRadius:     7,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: {
+          label: ctx => {
+            const s = scores[ctx.dataIndex];
+            return `${TIER_LABELS[s.tier]}（${Math.round(s.pct * 100)}%）`;
+          }
+        }},
+      },
+      scales: {
+        r: {
+          min: 0, max: 100,
+          ticks: { display: false, stepSize: 25 },
+          grid:       { color: 'rgba(61,53,48,0.07)', lineWidth: 1 },
+          angleLines: { color: 'rgba(61,53,48,0.07)' },
+          startAngle: 90,
+          pointLabels: {
+            font: { size: 10, family: "-apple-system,'PingFang SC',sans-serif" },
+            color: ctx => POINT_COLORS[scores[ctx.index].tier],
+            padding: 8,
+          },
+        }
+      },
+      animation: { duration: 900, easing: 'easeOutQuart' },
+    }
+  });
+}
+
+function buildCards(scores) {
+  const section = document.getElementById('dims-section');
+  section.innerHTML = '';
+
+  DIMS.forEach((dim, i) => {
+    const s    = scores[i];
+    const tier = s.tier;
+    // 进度条用展示分（越满=越健康），右侧显示层级而非百分比
+    const barPct = Math.round(s.displayPct * 100);
+
+    const paras = DIM_CONTENT[i][tier]
+      .split('\n\n')
+      .map(p => `<p>${p.replace(/\n/g,'<br>')}</p>`)
+      .join('');
+
+    const card = document.createElement('div');
+    card.className = 'dim-card';
+    card.innerHTML = `
+      <div class="dim-card-header">
+        <div class="dim-card-left">
+          <div class="dim-card-num">维度${NUM_ZH[i]}｜${dim.name}</div>
+          <div class="dim-card-title">${DIM_TITLES[i][tier]}</div>
+        </div>
+        <div class="dim-card-badge ${BADGE_CLS[tier]}">${TIER_LABELS[tier]}</div>
+      </div>
+      <div class="dim-card-body">
+        <div class="dim-card-content">${paras}</div>
+      </div>
+    `;
+    section.appendChild(card);
+  });
+}
+
+function buildQR(scores) {
+  const tier = overallTier(scores);
+  const copy = QR_COPY[tier];
+  document.getElementById('qr-title').textContent          = copy.title;
+  document.getElementById('qr-desc').textContent           = copy.desc;
+  document.getElementById('convert-hint-text').innerHTML   = copy.hint;
+  document.getElementById('wechat-id-display').textContent = `微信号：${CONFIG.wechatId}`;
+
+  if (CONFIG.qrImagePath) {
+    // Show real QR image, hide placeholder
+    const placeholder = document.querySelector('.qr-placeholder');
+    const box = document.querySelector('.qr-box');
+    if (placeholder) placeholder.style.display = 'none';
+    const img = document.createElement('img');
+    img.src = CONFIG.qrImagePath;
+    img.style.cssText = 'width:120px;height:120px;object-fit:contain;';
+    img.alt = '咏亦二维码';
+    if (box) box.appendChild(img);
+  }
+}
+
+// ═══════════════════════════════════════════
+// UI
+// ═══════════════════════════════════════════
+function copyWechatId() {
+  const id = CONFIG.wechatId;
+  const done = () => showToast('已复制微信号 ✓');
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(id).then(done).catch(() => fallbackCopy(id, done));
+  } else {
+    fallbackCopy(id, done);
+  }
+}
+function fallbackCopy(text, cb) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;opacity:0;';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); cb(); } catch(e) {}
+  document.body.removeChild(ta);
+}
+
+let toastTimer;
+function showToast(msg) {
+  let t = document.getElementById('_toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = '_toast';
+    t.style.cssText = 'position:fixed;bottom:40px;left:50%;transform:translateX(-50%) translateY(0);background:rgba(61,53,48,0.88);color:#fff;padding:10px 20px;border-radius:100px;font-size:13px;z-index:9999;transition:opacity 0.3s;letter-spacing:0.3px;white-space:nowrap;opacity:0;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.style.opacity = '0'; }, 2000);
+}
+
+// ═══════════════════════════════════════════
+// AIRTABLE
+// ═══════════════════════════════════════════
+function submitToAirtable() {
+  if (!CONFIG.airtableToken || CONFIG.airtableToken === 'YOUR_AIRTABLE_TOKEN') return;
+  const scores = calcScores();
+  fetch(
+    `https://api.airtable.com/v0/${CONFIG.airtableBaseId}/${encodeURIComponent(CONFIG.airtableTable)}`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${CONFIG.airtableToken}`,
+        'Content-Type':  'application/json',
+      },
+      body: JSON.stringify({ fields: {
+        '答题时间':   new Date().toISOString(),
+        '总体层级':   overallTier(scores),
+        '维度一得分': scores[0].raw, '维度一层级': TIER_LABELS[scores[0].tier],
+        '维度二得分': scores[1].raw, '维度二层级': TIER_LABELS[scores[1].tier],
+        '维度三得分': scores[2].raw, '维度三层级': TIER_LABELS[scores[2].tier],
+        '维度四得分': scores[3].raw, '维度四层级': TIER_LABELS[scores[3].tier],
+        '维度五得分': scores[4].raw, '维度五层级': TIER_LABELS[scores[4].tier],
+        '各题答案':   answers.map((a,i)=>`Q${i+1}:${['A','B','C','D'][a]||'-'}`).join(' | '),
+      }}),
+    }
+  ).catch(e => console.warn('Airtable:', e));
+}
+</script>
+</body>
+</html>
